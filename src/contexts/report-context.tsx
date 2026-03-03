@@ -8,6 +8,7 @@ import {
   type ReactNode,
 } from "react";
 import { v4 as uuidv4 } from "uuid";
+import { useAutoSave } from "@/hooks/use-auto-save";
 import type {
   Block,
   BlockType,
@@ -25,6 +26,8 @@ interface ReportState {
   activeBlockId: string | null;
   isDemo: boolean;
   isEditing: boolean;
+  isSaving: boolean;
+  lastSaved: Date | null;
 }
 
 interface ReportContextValue extends ReportState {
@@ -79,6 +82,7 @@ interface ReportProviderProps {
   initialAnnotations?: Annotation[];
   isDemo?: boolean;
   isEditing?: boolean;
+  persistLocally?: boolean;
 }
 
 export function ReportProvider({
@@ -88,6 +92,7 @@ export function ReportProvider({
   initialAnnotations = [],
   isDemo = false,
   isEditing = false,
+  persistLocally = true,
 }: ReportProviderProps) {
   const [report, setReport] = useState<Report>(
     initialReport ?? {
@@ -232,6 +237,13 @@ export function ReportProvider({
     []
   );
 
+  const { isSaving, lastSaved } = useAutoSave({
+    report,
+    blocks,
+    annotations,
+    enabled: persistLocally && !isDemo,
+  });
+
   return (
     <ReportContext.Provider
       value={{
@@ -241,6 +253,8 @@ export function ReportProvider({
         activeBlockId,
         isDemo,
         isEditing,
+        isSaving,
+        lastSaved,
         setReport,
         setBlocks,
         setAnnotations,

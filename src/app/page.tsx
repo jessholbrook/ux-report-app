@@ -1,7 +1,12 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { ReportList } from "@/components/dashboard/report-list";
+import { listLocalReports } from "@/lib/local-storage";
 
-export default function Home() {
+function LandingContent() {
   return (
     <div className="flex flex-col items-center justify-center px-4 py-24">
       <div className="mx-auto max-w-2xl text-center">
@@ -14,10 +19,10 @@ export default function Home() {
         </p>
         <div className="mt-8 flex items-center justify-center gap-4">
           <Button size="lg" asChild>
-            <Link href="/demo">Try the Demo</Link>
+            <Link href="/reports/new">New Report</Link>
           </Button>
           <Button variant="outline" size="lg" asChild>
-            <Link href="/auth/login">Sign In</Link>
+            <Link href="/demo">Try the Demo</Link>
           </Button>
         </div>
       </div>
@@ -44,4 +49,18 @@ export default function Home() {
       </div>
     </div>
   );
+}
+
+export default function Home() {
+  const [hasReports, setHasReports] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    setHasReports(listLocalReports().length > 0);
+    setLoaded(true);
+  }, []);
+
+  if (!loaded) return null;
+
+  return hasReports ? <ReportList /> : <LandingContent />;
 }

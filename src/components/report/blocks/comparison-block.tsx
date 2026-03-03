@@ -23,8 +23,11 @@ export function ComparisonBlock({ block }: ComparisonBlockProps) {
       (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
-        const url = URL.createObjectURL(file);
-        updateBlock(block.id, { [key]: url });
+        const reader = new FileReader();
+        reader.onload = () => {
+          updateBlock(block.id, { [key]: reader.result as string });
+        };
+        reader.readAsDataURL(file);
       },
     [block.id, updateBlock]
   );

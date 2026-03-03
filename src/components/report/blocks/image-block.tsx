@@ -21,17 +21,13 @@ export function ImageBlock({ block }: ImageBlockProps) {
       const file = e.target.files?.[0];
       if (!file) return;
 
-      if (isDemo) {
-        // In demo mode, use object URL for local preview
-        const url = URL.createObjectURL(file);
-        updateBlock(block.id, { url });
-      } else {
-        // TODO: Upload to Supabase Storage
-        const url = URL.createObjectURL(file);
-        updateBlock(block.id, { url });
-      }
+      const reader = new FileReader();
+      reader.onload = () => {
+        updateBlock(block.id, { url: reader.result as string });
+      };
+      reader.readAsDataURL(file);
     },
-    [block.id, isDemo, updateBlock]
+    [block.id, updateBlock]
   );
 
   if (!content.url) {

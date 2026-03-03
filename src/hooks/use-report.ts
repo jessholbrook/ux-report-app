@@ -1,10 +1,12 @@
 import { createClient } from "@/lib/supabase/client";
 import type { Report, Block, Annotation } from "@/lib/types";
 
-const supabase = createClient();
+function getSupabase() {
+  return createClient();
+}
 
 export async function fetchReport(id: string) {
-  const { data, error } = await supabase
+  const { data, error } = await getSupabase()
     .from("reports")
     .select("*")
     .eq("id", id)
@@ -15,7 +17,7 @@ export async function fetchReport(id: string) {
 }
 
 export async function fetchReportByShareToken(token: string) {
-  const { data, error } = await supabase
+  const { data, error } = await getSupabase()
     .from("reports")
     .select("*")
     .eq("share_token", token)
@@ -26,7 +28,7 @@ export async function fetchReportByShareToken(token: string) {
 }
 
 export async function fetchBlocks(reportId: string) {
-  const { data, error } = await supabase
+  const { data, error } = await getSupabase()
     .from("blocks")
     .select("*")
     .eq("report_id", reportId)
@@ -39,7 +41,7 @@ export async function fetchBlocks(reportId: string) {
 export async function fetchAnnotations(blockIds: string[]) {
   if (blockIds.length === 0) return [];
 
-  const { data, error } = await supabase
+  const { data, error } = await getSupabase()
     .from("annotations")
     .select("*")
     .in("block_id", blockIds);
@@ -49,11 +51,12 @@ export async function fetchAnnotations(blockIds: string[]) {
 }
 
 export async function saveReport(report: Report) {
-  const { error } = await supabase.from("reports").upsert(report);
+  const { error } = await getSupabase().from("reports").upsert(report);
   if (error) throw error;
 }
 
 export async function saveBlocks(reportId: string, blocks: Block[]) {
+  const supabase = getSupabase();
   // Delete removed blocks
   await supabase
     .from("blocks")
@@ -70,6 +73,7 @@ export async function saveAnnotations(
   blockIds: string[],
   annotations: Annotation[]
 ) {
+  const supabase = getSupabase();
   // Delete removed annotations for these blocks
   for (const blockId of blockIds) {
     const blockAnnotations = annotations
@@ -95,6 +99,7 @@ export async function saveAnnotations(
 }
 
 export async function createReport(title: string) {
+  const supabase = getSupabase();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -111,11 +116,12 @@ export async function createReport(title: string) {
 }
 
 export async function deleteReport(id: string) {
-  const { error } = await supabase.from("reports").delete().eq("id", id);
+  const { error } = await getSupabase().from("reports").delete().eq("id", id);
   if (error) throw error;
 }
 
 export async function listUserReports() {
+  const supabase = getSupabase();
   const {
     data: { user },
   } = await supabase.auth.getUser();

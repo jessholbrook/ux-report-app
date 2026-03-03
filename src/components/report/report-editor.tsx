@@ -4,6 +4,7 @@ import { useCallback, useState } from "react";
 import { useReport } from "@/contexts/report-context";
 import { BlockRenderer } from "./block-renderer";
 import { BlockToolbar } from "./block-toolbar";
+import { ExportToolbar } from "@/components/export/export-toolbar";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -42,6 +43,11 @@ export function ReportEditor() {
         </div>
       )}
 
+      <div className="mb-6">
+        <ExportToolbar />
+      </div>
+
+      <div id="report-content">
       <div className="mb-8 space-y-3">
         <Input
           value={report.title}
@@ -86,6 +92,8 @@ export function ReportEditor() {
           }`}
         />
       </div>
+
+      </div>{/* end #report-content */}
 
       <BlockToolbar
         afterPosition={
