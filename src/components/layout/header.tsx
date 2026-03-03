@@ -15,7 +15,13 @@ export function Header() {
             href="/"
             className="text-sm text-muted-foreground hover:text-foreground"
           >
-            My Reports
+            Reports
+          </Link>
+          <Link
+            href="/ai-reports"
+            className="text-sm text-muted-foreground hover:text-foreground"
+          >
+            AI Reports
           </Link>
           <Link
             href="/demo"
