@@ -14,6 +14,7 @@ import {
   Users,
   MessageCircle,
   FileSearch,
+  Plus,
   Sparkles,
 } from "lucide-react";
 
@@ -87,6 +88,12 @@ function LandingContent() {
         </p>
         <div className="mt-8 flex items-center justify-center gap-4">
           <Button size="lg" asChild>
+            <Link href="/ai-reports/new">
+              <Plus className="size-4 mr-2" />
+              New Report
+            </Link>
+          </Button>
+          <Button size="lg" variant="outline" asChild>
             <Link href="/ai-reports/demo">View Demo Report</Link>
           </Button>
         </div>
@@ -145,9 +152,17 @@ export default function AIReportsPage() {
     <div className="mx-auto max-w-4xl px-4 py-8">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">AI Reports</h1>
-        <Button variant="outline" size="sm" asChild>
-          <Link href="/ai-reports/demo">View Demo</Link>
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button size="sm" asChild>
+            <Link href="/ai-reports/new">
+              <Plus className="size-4 mr-1" />
+              New Report
+            </Link>
+          </Button>
+          <Button variant="outline" size="sm" asChild>
+            <Link href="/ai-reports/demo">View Demo</Link>
+          </Button>
+        </div>
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
         {entries.map((entry) => (
