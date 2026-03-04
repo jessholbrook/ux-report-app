@@ -11,6 +11,8 @@ export const demoAIReport: AIReport = {
   created_at: "2025-01-15T10:00:00Z",
   updated_at: "2025-01-18T16:30:00Z",
   version: 3,
+  human_hours_estimate: 80,
+  ai_minutes_actual: 4320,
 
   authors: [
     {
@@ -58,6 +60,9 @@ export const demoAIReport: AIReport = {
         description:
           "Only 3 of 12 participants (25%) discovered the primary navigation menu without prompting during the account management task. Users expected tab-based navigation visible at the bottom of the screen.",
         severity: "critical" as const,
+        recommendation:
+          "Replace the hamburger menu with a 5-tab bottom navigation bar (Home, Search, Categories, Cart, Account). Prototype with the existing icon system and run a quick A/B preference test before full implementation.",
+        prototype_repo: "https://github.com/example/mobile-bottom-nav-prototype",
       },
       confidence: "high",
       reasoning: {
@@ -84,6 +89,8 @@ export const demoAIReport: AIReport = {
         description:
           "8 of 12 participants (67%) attempted to use search before browsing categories. The current search placement (behind a tap) adds an unnecessary step. Participants spent an average of 4.2 seconds looking for the search bar.",
         severity: "major" as const,
+        recommendation:
+          "Surface search as a persistent bar at the top of home and category pages. Add a floating search button on product detail and checkout screens for quick access.",
       },
       confidence: "high",
       reasoning: {
@@ -109,6 +116,8 @@ export const demoAIReport: AIReport = {
         description:
           "5 of 12 participants accidentally exited the checkout flow by using the device back button. The app treats the back gesture as 'exit checkout' rather than 'previous step,' causing frustration and cart abandonment.",
         severity: "critical" as const,
+        recommendation:
+          "Override the system back gesture within checkout to navigate to the previous step. Add an explicit 'Exit checkout' action behind a confirmation dialog to prevent accidental cart abandonment.",
       },
       confidence: "medium",
       reasoning: {
@@ -135,6 +144,8 @@ export const demoAIReport: AIReport = {
         description:
           "11 of 12 participants successfully completed the category browsing task on first attempt. Card sort alignment between our IA and user expectations scored 89% — significantly above the 70% benchmark.",
         severity: "positive" as const,
+        recommendation:
+          "Preserve the current category structure as-is. Use it as a reference model when expanding to new product verticals — the mental model alignment here is strong.",
       },
       confidence: "high",
       reasoning: {
@@ -274,7 +285,7 @@ export const demoAIReport: AIReport = {
       name: "Dr. Emily Rivera",
       role: "VP of Product",
       reason:
-        "Key stakeholder for mobile navigation decisions. Previously championed the hamburger menu approach — findings directly impact her team's roadmap.",
+        "Could prioritize the bottom-nav migration on Q2 roadmap. Owns the mobile navigation budget and previously championed the hamburger menu — she'll want to see this data before sprint planning.",
       expertise: ["mobile UX", "product strategy", "e-commerce"],
       avatar_url: "https://placehold.co/40x40/ec4899/ffffff?text=ER",
     },
@@ -282,7 +293,7 @@ export const demoAIReport: AIReport = {
       name: "James Park",
       role: "Senior Mobile Engineer",
       reason:
-        "Will lead implementation of navigation changes. Early review ensures technical feasibility of recommendations, especially the back-button override.",
+        "Could implement the back-button override and bottom-nav shell within a single sprint. Has shipped similar navigation refactors on the Android codebase before.",
       expertise: ["Android", "iOS", "mobile architecture"],
       avatar_url: "https://placehold.co/40x40/f59e0b/ffffff?text=JP",
     },
@@ -290,7 +301,7 @@ export const demoAIReport: AIReport = {
       name: "Lisa Tran",
       role: "UX Research Manager",
       reason:
-        "Methodological review — first time our team has used AI-assisted analysis at this scale. Her review validates our approach for future studies.",
+        "Could adapt this AI-assisted analysis workflow for the upcoming checkout redesign study. Her team runs 3 similar studies per quarter.",
       expertise: ["research methods", "usability testing", "team leadership"],
       avatar_url: "https://placehold.co/40x40/10b981/ffffff?text=LT",
     },
@@ -301,7 +312,7 @@ export const demoAIReport: AIReport = {
       name: "Alex Kim",
       role: "Data Scientist",
       reason:
-        "Could extend this analysis with quantitative analytics data (funnel drop-off rates, A/B test results) to validate behavioral findings at scale.",
+        "Could validate these findings at scale by pulling funnel drop-off rates and running a targeted A/B test on bottom-nav vs. hamburger within a week.",
       expertise: ["analytics", "A/B testing", "Python", "statistics"],
       avatar_url: "https://placehold.co/40x40/3b82f6/ffffff?text=AK",
     },
@@ -309,7 +320,7 @@ export const demoAIReport: AIReport = {
       name: "Priya Patel",
       role: "Accessibility Specialist",
       reason:
-        "Navigation redesign will significantly impact screen reader flows. Early collaboration prevents accessibility regressions.",
+        "Could audit the bottom-nav prototype for screen reader compatibility and write the WCAG test plan before engineering starts building.",
       expertise: ["WCAG", "screen readers", "inclusive design", "mobile a11y"],
       avatar_url: "https://placehold.co/40x40/6366f1/ffffff?text=PP",
     },

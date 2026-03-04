@@ -92,6 +92,8 @@ export interface FindingContent {
   title: string;
   description: string;
   severity: FindingSeverity;
+  recommendation?: string;
+  prototype_repo?: string;
 }
 
 export type AIReportSectionType = BlockType | "finding";
@@ -130,4 +132,7 @@ export interface AIReport {
 
   related_reports: RelatedReport[];
   tags: string[];
+
+  human_hours_estimate?: number;
+  ai_minutes_actual?: number;
 }

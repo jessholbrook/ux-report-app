@@ -6,7 +6,7 @@ import {
   AvatarFallback,
   AvatarGroup,
 } from "@/components/ui/avatar";
-import { Bot, Calendar, Hash } from "lucide-react";
+import { Bot, Calendar, Clock, Hash, Zap } from "lucide-react";
 
 function initials(name: string) {
   return name
@@ -44,6 +44,26 @@ export function ReportHero({ report }: { report: AIReport }) {
         <p className="mt-2 text-muted-foreground leading-relaxed">
           {report.summary}
         </p>
+
+        {report.human_hours_estimate != null && report.ai_minutes_actual != null && (
+          <div className="mt-3 flex items-center gap-4 rounded-md bg-muted/50 px-3 py-2 text-sm text-muted-foreground">
+            <span className="flex items-center gap-1.5">
+              <Clock className="size-3.5" />
+              Manual estimate: {report.human_hours_estimate}h
+            </span>
+            <span className="text-muted-foreground/40">|</span>
+            <span className="flex items-center gap-1.5">
+              <Zap className="size-3.5" />
+              AI-assisted: {report.ai_minutes_actual >= 60
+                ? `${Math.round(report.ai_minutes_actual / 60)}h`
+                : `${report.ai_minutes_actual}m`}
+            </span>
+            <span className="text-muted-foreground/40">|</span>
+            <span className="font-medium text-emerald-600 dark:text-emerald-400">
+              {Math.round((1 - report.ai_minutes_actual / (report.human_hours_estimate * 60)) * 100)}% faster
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Meta bar */}
@@ -95,7 +115,7 @@ export function ReportHero({ report }: { report: AIReport }) {
         <Hash className="size-3.5 text-muted-foreground" />
         {report.tags.map((tag) => (
           <Badge key={tag} variant="secondary" className="text-xs">
-            {tag}
+            #{tag}
           </Badge>
         ))}
       </div>

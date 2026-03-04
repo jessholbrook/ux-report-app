@@ -29,7 +29,10 @@ export function PeoplePanel({
         className="flex w-full items-center gap-3 p-4 text-left hover:bg-muted/50 transition-colors"
       >
         <Users className="size-5 text-blue-500" />
-        <h2 className="font-semibold flex-1">People</h2>
+        <div className="flex-1">
+          <h2 className="font-semibold">People</h2>
+          <p className="text-xs text-muted-foreground font-normal">Who could act on these findings</p>
+        </div>
         {totalCount > 0 && (
           <span className="text-xs text-muted-foreground">
             {approvedCount}/{totalCount} reviewed
@@ -47,7 +50,7 @@ export function PeoplePanel({
           {/* Suggested Reviewers */}
           {reviewers.length > 0 && (
             <div className="space-y-2">
-              <h3 className="text-sm font-medium">Suggested Reviewers</h3>
+              <h3 className="text-sm font-medium">Recommended Teammates</h3>
               <div className="space-y-2">
                 {reviewers.map((person) => (
                   <PersonCard key={person.name} person={person} />
@@ -74,7 +77,7 @@ export function PeoplePanel({
           {/* Suggested Collaborators */}
           {collaborators.length > 0 && (
             <div className="space-y-2">
-              <h3 className="text-sm font-medium">Suggested Collaborators</h3>
+              <h3 className="text-sm font-medium">Could Also Help</h3>
               <div className="space-y-2">
                 {collaborators.map((person) => (
                   <PersonCard key={person.name} person={person} />

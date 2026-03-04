@@ -11,7 +11,8 @@ import { MethodologyPanel } from "./methodology-panel";
 import { PeoplePanel } from "./people-panel";
 import { ProvenancePanel } from "./provenance-panel";
 import { ConnectionsPanel } from "./connections-panel";
-import { Plus } from "lucide-react";
+import { useState } from "react";
+import { Plus, X, Hash } from "lucide-react";
 import { v4 as uuidv4 } from "uuid";
 import type {
   AIReportSection,
@@ -48,6 +49,66 @@ function SectionRenderer({ section }: { section: AIReportSection }) {
     default:
       return null;
   }
+}
+
+function TagInput({
+  tags,
+  onChange,
+}: {
+  tags: string[];
+  onChange: (tags: string[]) => void;
+}) {
+  const [input, setInput] = useState("");
+
+  function addTag(raw: string) {
+    const tag = raw
+      .replace(/^#/, "")
+      .trim()
+      .replace(/\s+/g, "-")
+      .toLowerCase();
+    if (tag && !tags.includes(tag)) {
+      onChange([...tags, tag]);
+    }
+    setInput("");
+  }
+
+  function removeTag(tag: string) {
+    onChange(tags.filter((t) => t !== tag));
+  }
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center gap-1.5 flex-wrap">
+        <Hash className="size-3.5 text-muted-foreground" />
+        {tags.map((tag) => (
+          <Badge key={tag} variant="secondary" className="text-xs group gap-1">
+            #{tag}
+            <button
+              onClick={() => removeTag(tag)}
+              className="opacity-0 group-hover:opacity-100 transition-opacity"
+            >
+              <X className="size-3" />
+            </button>
+          </Badge>
+        ))}
+      </div>
+      <Input
+        value={input}
+        onChange={(e) => setInput(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === ",") {
+            e.preventDefault();
+            addTag(input);
+          }
+        }}
+        onBlur={() => {
+          if (input.trim()) addTag(input);
+        }}
+        placeholder="Add tag..."
+        className="h-8 text-sm"
+      />
+    </div>
+  );
 }
 
 export function AIReportEditor() {
@@ -106,6 +167,52 @@ export function AIReportEditor() {
           placeholder="Executive summary..."
           className="border-none shadow-none focus-visible:ring-0 px-0 resize-none text-muted-foreground"
           rows={3}
+        />
+
+        {/* Time estimates */}
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <label className="text-xs text-muted-foreground whitespace-nowrap">
+              Manual estimate (hours)
+            </label>
+            <Input
+              type="number"
+              min={0}
+              value={report.human_hours_estimate ?? ""}
+              onChange={(e) =>
+                updateReport({
+                  human_hours_estimate: e.target.value
+                    ? Number(e.target.value)
+                    : undefined,
+                })
+              }
+              className="h-8 w-24 text-sm"
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <label className="text-xs text-muted-foreground whitespace-nowrap">
+              AI-assisted (minutes)
+            </label>
+            <Input
+              type="number"
+              min={0}
+              value={report.ai_minutes_actual ?? ""}
+              onChange={(e) =>
+                updateReport({
+                  ai_minutes_actual: e.target.value
+                    ? Number(e.target.value)
+                    : undefined,
+                })
+              }
+              className="h-8 w-24 text-sm"
+            />
+          </div>
+        </div>
+
+        {/* Tags */}
+        <TagInput
+          tags={report.tags}
+          onChange={(tags) => updateReport({ tags })}
         />
       </div>
 

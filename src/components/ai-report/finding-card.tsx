@@ -4,11 +4,14 @@ import type { AIReportSection, FindingContent } from "@/lib/ai-report-types";
 import { ConfidenceBadge } from "./confidence-badge";
 import { ReasoningTrace } from "./reasoning-trace";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   AlertTriangle,
   AlertCircle,
   Info,
   CheckCircle2,
+  Lightbulb,
+  ExternalLink,
 } from "lucide-react";
 
 const severityConfig: Record<
@@ -61,6 +64,43 @@ export function FindingCard({ section }: { section: AIReportSection }) {
           <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
             {content.description}
           </p>
+
+          {content.recommendation && (
+            <div className="mt-3 flex items-start gap-2 rounded-md bg-muted/50 p-3">
+              <Lightbulb className="size-4 shrink-0 mt-0.5 text-amber-500" />
+              <div className="space-y-2">
+                <p className="text-sm">{content.recommendation}</p>
+                {content.prototype_repo ? (
+                  <a
+                    href={content.prototype_repo}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <Button variant="outline" size="sm" className="h-7 text-xs">
+                      View Prototype
+                      <ExternalLink className="size-3 ml-1" />
+                    </Button>
+                  </a>
+                ) : (
+                  <a
+                    href={`https://github.com/new?name=${encodeURIComponent(
+                      content.title
+                        .toLowerCase()
+                        .replace(/[^a-z0-9]+/g, "-")
+                        .replace(/(^-|-$)/g, "")
+                    )}-prototype`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <Button variant="outline" size="sm" className="h-7 text-xs">
+                      Build Prototype
+                      <ExternalLink className="size-3 ml-1" />
+                    </Button>
+                  </a>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
