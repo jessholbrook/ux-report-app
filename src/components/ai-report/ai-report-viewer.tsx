@@ -8,6 +8,7 @@ import { PeoplePanel } from "./people-panel";
 import { ProvenancePanel } from "./provenance-panel";
 import { ConnectionsPanel } from "./connections-panel";
 import { ChatPanel } from "./chat-panel";
+import { AIExportToolbar } from "./ai-export-toolbar";
 import { Separator } from "@/components/ui/separator";
 import type {
   AIReportSection,
@@ -58,6 +59,10 @@ export function AIReportViewer() {
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-8">
+      <div className="mb-6">
+        <AIExportToolbar />
+      </div>
+
       {/* Hero */}
       <ReportHero report={report} />
 

@@ -6,49 +6,123 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { FindingCard } from "./finding-card";
-import { MethodologyPanel } from "./methodology-panel";
-import { PeoplePanel } from "./people-panel";
-import { ProvenancePanel } from "./provenance-panel";
+import { EditableFindingCard } from "./editable-finding-card";
+import { EditableMethodologyPanel } from "./editable-methodology-panel";
+import { EditablePeoplePanel } from "./editable-people-panel";
+import { EditableProvenancePanel } from "./editable-provenance-panel";
 import { ConnectionsPanel } from "./connections-panel";
+import { AIExportToolbar } from "./ai-export-toolbar";
 import { useState } from "react";
-import { Plus, X, Hash } from "lucide-react";
+import { Plus, X, Hash, Heading2, Type, Minus } from "lucide-react";
 import { v4 as uuidv4 } from "uuid";
 import type {
   AIReportSection,
+  AIReportStatus,
   FindingContent,
 } from "@/lib/ai-report-types";
 import type { HeadingContent, TextContent } from "@/lib/types";
 
-function SectionRenderer({ section }: { section: AIReportSection }) {
-  switch (section.type) {
-    case "finding":
-      return <FindingCard section={section} />;
-    case "heading": {
-      const content = section.content as HeadingContent;
-      const Tag = `h${content.level}` as "h1" | "h2" | "h3";
-      const sizeClass =
-        content.level === 1
-          ? "text-2xl font-bold"
-          : content.level === 2
-            ? "text-xl font-semibold"
-            : "text-lg font-medium";
-      return <Tag className={sizeClass}>{content.text}</Tag>;
-    }
-    case "text": {
-      const content = section.content as TextContent;
-      return (
-        <div
-          className="prose prose-sm dark:prose-invert max-w-none"
-          dangerouslySetInnerHTML={{ __html: content.html }}
-        />
-      );
-    }
-    case "divider":
-      return <Separator className="my-2" />;
-    default:
-      return null;
-  }
+const statuses: AIReportStatus[] = ["draft", "in-review", "published"];
+
+function EditableHeading({
+  section,
+  onUpdate,
+  onDelete,
+}: {
+  section: AIReportSection;
+  onUpdate: (s: AIReportSection) => void;
+  onDelete: (id: string) => void;
+}) {
+  const content = section.content as HeadingContent;
+  const sizeClass =
+    content.level === 1
+      ? "text-2xl font-bold"
+      : content.level === 2
+        ? "text-xl font-semibold"
+        : "text-lg font-medium";
+
+  return (
+    <div className="group flex items-center gap-2">
+      <Input
+        value={content.text}
+        onChange={(e) =>
+          onUpdate({
+            ...section,
+            content: { ...content, text: e.target.value },
+          })
+        }
+        className={`border-none shadow-none focus-visible:ring-0 px-0 h-auto ${sizeClass}`}
+        placeholder="Heading..."
+      />
+      <Button
+        variant="ghost"
+        size="sm"
+        className="h-7 px-1.5 opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive"
+        onClick={() => onDelete(section.id)}
+      >
+        <X className="size-3.5" />
+      </Button>
+    </div>
+  );
+}
+
+function EditableText({
+  section,
+  onUpdate,
+  onDelete,
+}: {
+  section: AIReportSection;
+  onUpdate: (s: AIReportSection) => void;
+  onDelete: (id: string) => void;
+}) {
+  const content = section.content as TextContent;
+
+  return (
+    <div className="group relative">
+      <Textarea
+        value={content.html.replace(/<[^>]+>/g, "")}
+        onChange={(e) =>
+          onUpdate({
+            ...section,
+            content: { html: `<p>${e.target.value}</p>` },
+          })
+        }
+        className="border-none shadow-none focus-visible:ring-0 px-0 resize-none text-sm"
+        placeholder="Write something..."
+        rows={3}
+      />
+      <Button
+        variant="ghost"
+        size="sm"
+        className="absolute top-0 right-0 h-7 px-1.5 opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive"
+        onClick={() => onDelete(section.id)}
+      >
+        <X className="size-3.5" />
+      </Button>
+    </div>
+  );
+}
+
+function EditableDivider({
+  section,
+  onDelete,
+}: {
+  section: AIReportSection;
+  onDelete: (id: string) => void;
+}) {
+  return (
+    <div className="group flex items-center gap-2">
+      <Separator className="flex-1" />
+      <Button
+        variant="ghost"
+        size="sm"
+        className="h-6 px-1.5 opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive"
+        onClick={() => onDelete(section.id)}
+      >
+        <X className="size-3" />
+      </Button>
+    </div>
+  );
 }
 
 function TagInput({
@@ -118,15 +192,17 @@ export function AIReportEditor() {
     (a, b) => a.position - b.position
   );
 
-  function addFinding() {
-    const maxPos = report.sections.length > 0
-      ? Math.max(...report.sections.map((s) => s.position))
-      : -1;
+  function nextPosition() {
+    return report.sections.length > 0
+      ? Math.max(...report.sections.map((s) => s.position)) + 1
+      : 0;
+  }
 
+  function addFinding() {
     const newSection: AIReportSection = {
       id: uuidv4(),
       type: "finding",
-      position: maxPos + 1,
+      position: nextPosition(),
       content: {
         title: "New finding",
         description: "Describe the finding...",
@@ -134,8 +210,93 @@ export function AIReportEditor() {
       } as FindingContent,
       confidence: "medium",
     };
-
     updateReport({ sections: [...report.sections, newSection] });
+  }
+
+  function addHeading() {
+    const newSection: AIReportSection = {
+      id: uuidv4(),
+      type: "heading",
+      position: nextPosition(),
+      content: { level: 2, text: "" } as HeadingContent,
+    };
+    updateReport({ sections: [...report.sections, newSection] });
+  }
+
+  function addText() {
+    const newSection: AIReportSection = {
+      id: uuidv4(),
+      type: "text",
+      position: nextPosition(),
+      content: { html: "<p></p>" } as TextContent,
+    };
+    updateReport({ sections: [...report.sections, newSection] });
+  }
+
+  function addDivider() {
+    const newSection: AIReportSection = {
+      id: uuidv4(),
+      type: "divider",
+      position: nextPosition(),
+      content: {},
+    };
+    updateReport({ sections: [...report.sections, newSection] });
+  }
+
+  function updateSection(updated: AIReportSection) {
+    updateReport({
+      sections: report.sections.map((s) =>
+        s.id === updated.id ? updated : s
+      ),
+    });
+  }
+
+  function deleteSection(id: string) {
+    updateReport({
+      sections: report.sections.filter((s) => s.id !== id),
+    });
+  }
+
+  function renderSection(section: AIReportSection) {
+    switch (section.type) {
+      case "finding":
+        return (
+          <EditableFindingCard
+            key={section.id}
+            section={section}
+            onUpdate={updateSection}
+            onDelete={deleteSection}
+          />
+        );
+      case "heading":
+        return (
+          <EditableHeading
+            key={section.id}
+            section={section}
+            onUpdate={updateSection}
+            onDelete={deleteSection}
+          />
+        );
+      case "text":
+        return (
+          <EditableText
+            key={section.id}
+            section={section}
+            onUpdate={updateSection}
+            onDelete={deleteSection}
+          />
+        );
+      case "divider":
+        return (
+          <EditableDivider
+            key={section.id}
+            section={section}
+            onDelete={deleteSection}
+          />
+        );
+      default:
+        return null;
+    }
   }
 
   return (
@@ -146,13 +307,27 @@ export function AIReportEditor() {
         </div>
       )}
 
+      <div className="mb-6">
+        <AIExportToolbar />
+      </div>
+
       {/* Report metadata */}
       <div className="mb-8 space-y-3">
         <div className="flex items-center gap-2">
-          <Badge variant="outline" className="capitalize">
-            {report.status.replace("-", " ")}
-          </Badge>
-          <span className="text-xs text-muted-foreground">v{report.version}</span>
+          {statuses.map((s) => (
+            <Button
+              key={s}
+              variant={report.status === s ? "default" : "outline"}
+              size="sm"
+              className="h-7 text-xs capitalize"
+              onClick={() => updateReport({ status: s })}
+            >
+              {s.replace("-", " ")}
+            </Button>
+          ))}
+          <span className="text-xs text-muted-foreground ml-2">
+            v{report.version}
+          </span>
         </div>
 
         <Input
@@ -218,34 +393,57 @@ export function AIReportEditor() {
 
       {/* Sections */}
       <div className="space-y-4">
-        {sortedSections.map((section) => (
-          <SectionRenderer key={section.id} section={section} />
-        ))}
+        {sortedSections.map((section) => renderSection(section))}
       </div>
 
-      <div className="mt-4 flex gap-2">
+      {/* Section toolbar */}
+      <div className="mt-4 flex gap-2 flex-wrap">
         <Button variant="outline" size="sm" onClick={addFinding}>
-          <Plus className="size-4 mr-1" />
-          Add Finding
+          <Plus className="size-3.5 mr-1" />
+          Finding
+        </Button>
+        <Button variant="outline" size="sm" onClick={addHeading}>
+          <Heading2 className="size-3.5 mr-1" />
+          Heading
+        </Button>
+        <Button variant="outline" size="sm" onClick={addText}>
+          <Type className="size-3.5 mr-1" />
+          Text
+        </Button>
+        <Button variant="outline" size="sm" onClick={addDivider}>
+          <Minus className="size-3.5 mr-1" />
+          Divider
         </Button>
       </div>
 
       <Separator className="my-8" />
 
-      {/* Panels */}
+      {/* Editable panels */}
       <div className="space-y-4">
-        <MethodologyPanel
+        <EditableMethodologyPanel
           methodology={report.methodology}
           aiContributors={report.ai_contributors}
+          onUpdateMethodology={(methodology) => updateReport({ methodology })}
+          onUpdateContributors={(ai_contributors) =>
+            updateReport({ ai_contributors })
+          }
         />
-        <PeoplePanel
+        <EditablePeoplePanel
           reviewers={report.suggested_reviewers}
           collaborators={report.suggested_collaborators}
           reviews={report.reviews}
+          onUpdateReviewers={(suggested_reviewers) =>
+            updateReport({ suggested_reviewers })
+          }
+          onUpdateCollaborators={(suggested_collaborators) =>
+            updateReport({ suggested_collaborators })
+          }
         />
-        <ProvenancePanel
+        <EditableProvenancePanel
           repoLinks={report.repo_links}
           dataSources={report.data_sources}
+          onUpdateRepos={(repo_links) => updateReport({ repo_links })}
+          onUpdateSources={(data_sources) => updateReport({ data_sources })}
         />
         <ConnectionsPanel relatedReports={report.related_reports} />
       </div>

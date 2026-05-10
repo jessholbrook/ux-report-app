@@ -1,7 +1,31 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { AuthButton } from "./auth-button";
+import { cn } from "@/lib/utils";
+
+function NavLink({ href, children }: { href: string; children: React.ReactNode }) {
+  const pathname = usePathname();
+  const isActive =
+    href === "/"
+      ? pathname === "/" || (pathname.startsWith("/reports") && !pathname.startsWith("/ai-reports"))
+      : pathname.startsWith(href);
+
+  return (
+    <Link
+      href={href}
+      className={cn(
+        "text-sm transition-colors",
+        isActive
+          ? "text-foreground font-medium"
+          : "text-muted-foreground hover:text-foreground"
+      )}
+    >
+      {children}
+    </Link>
+  );
+}
 
 export function Header() {
   return (
@@ -11,24 +35,8 @@ export function Header() {
           UX Report
         </Link>
         <nav className="flex items-center gap-4">
-          <Link
-            href="/"
-            className="text-sm text-muted-foreground hover:text-foreground"
-          >
-            Reports
-          </Link>
-          <Link
-            href="/ai-reports"
-            className="text-sm text-muted-foreground hover:text-foreground"
-          >
-            AI Reports
-          </Link>
-          <Link
-            href="/demo"
-            className="text-sm text-muted-foreground hover:text-foreground"
-          >
-            Demo
-          </Link>
+          <NavLink href="/">Reports</NavLink>
+          <NavLink href="/ai-reports">AI Reports</NavLink>
           <AuthButton />
         </nav>
       </div>
