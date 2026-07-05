@@ -13,7 +13,7 @@ interface ComparisonBlockProps {
 }
 
 export function ComparisonBlock({ block }: ComparisonBlockProps) {
-  const { updateBlock, isEditing, isDemo } = useReport();
+  const { updateBlock, isEditing } = useReport();
   const content = block.content as ComparisonContent;
   const beforeInputRef = useRef<HTMLInputElement>(null);
   const afterInputRef = useRef<HTMLInputElement>(null);
@@ -107,7 +107,7 @@ export function ComparisonBlock({ block }: ComparisonBlockProps) {
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-3" data-comparison-block data-mode={content.default_mode}>
       {isEditing && (
         <div className="flex items-center justify-between">
           <div className="flex gap-2">
@@ -128,7 +128,12 @@ export function ComparisonBlock({ block }: ComparisonBlockProps) {
               className="w-28 text-xs"
             />
           </div>
-          <Button variant="outline" size="sm" onClick={toggleMode}>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={toggleMode}
+            data-comparison-toggle
+          >
             {content.default_mode === "slider" ? "Side by Side" : "Slider"}
           </Button>
         </div>
@@ -136,7 +141,12 @@ export function ComparisonBlock({ block }: ComparisonBlockProps) {
 
       {!isEditing && (
         <div className="flex justify-end">
-          <Button variant="ghost" size="sm" onClick={toggleMode}>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={toggleMode}
+            data-comparison-toggle
+          >
             {content.default_mode === "slider"
               ? "Switch to Side by Side"
               : "Switch to Slider"}

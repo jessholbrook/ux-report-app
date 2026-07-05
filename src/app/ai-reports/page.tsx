@@ -57,7 +57,7 @@ function ReportCard({ entry }: { entry: AIReportIndexEntry }) {
       <p className="mt-1 text-sm text-muted-foreground line-clamp-2">
         {entry.summary}
       </p>
-      {entry.tags.length > 0 && (
+      {entry.tags && entry.tags.length > 0 && (
         <div className="mt-3 flex flex-wrap gap-1">
           {entry.tags.slice(0, 4).map((tag) => (
             <Badge key={tag} variant="secondary" className="text-xs">
@@ -140,6 +140,8 @@ export default function AIReportsPage() {
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
+    // localStorage is client-only, so this load must happen post-mount
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setEntries(listAIReports());
     setLoaded(true);
   }, []);

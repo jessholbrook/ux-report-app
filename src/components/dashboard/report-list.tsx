@@ -23,10 +23,17 @@ export function ReportList() {
   const [reports, setReports] = useState<ReportIndexEntry[]>([]);
 
   useEffect(() => {
+    // localStorage is client-only; reading it in a lazy initializer would
+    // desync SSR and client markup, so an effect is the right place.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setReports(listLocalReports());
   }, []);
 
-  function handleDelete(id: string) {
+  function handleDelete(id: string, title: string) {
+    const ok = window.confirm(
+      `Delete "${title}"? This permanently removes the report and its annotations.`
+    );
+    if (!ok) return;
     deleteLocalReport(id);
     setReports((prev) => prev.filter((r) => r.id !== id));
   }
@@ -69,7 +76,7 @@ export function ReportList() {
                 variant="ghost"
                 size="sm"
                 className="text-destructive hover:text-destructive"
-                onClick={() => handleDelete(report.id)}
+                onClick={() => handleDelete(report.id, report.title)}
               >
                 Delete
               </Button>

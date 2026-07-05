@@ -5,18 +5,17 @@ import {
   useContext,
   useState,
   useCallback,
-  useEffect,
-  useRef,
   type ReactNode,
 } from "react";
 import type { AIReport } from "@/lib/ai-report-types";
 import { saveAIReport } from "@/lib/ai-report-storage";
+import { useAutoSave } from "@/hooks/use-auto-save";
 
 interface AIReportContextValue {
   report: AIReport;
   isEditing: boolean;
   isDemo: boolean;
-  isSaving: boolean;
+  saveFailed: boolean;
   lastSaved: Date | null;
   updateReport: (updates: Partial<AIReport>) => void;
   setReport: (report: AIReport) => void;
@@ -38,9 +37,6 @@ export function AIReportProvider({
   isEditing = false,
 }: AIReportProviderProps) {
   const [report, setReport] = useState<AIReport>(initialReport);
-  const [isSaving, setIsSaving] = useState(false);
-  const [lastSaved, setLastSaved] = useState<Date | null>(null);
-  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const updateReport = useCallback((updates: Partial<AIReport>) => {
     setReport((prev) => ({
@@ -50,27 +46,11 @@ export function AIReportProvider({
     }));
   }, []);
 
-  // Auto-save
-  useEffect(() => {
-    if (isDemo || !isEditing) return;
-
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-    }
-
-    timeoutRef.current = setTimeout(() => {
-      setIsSaving(true);
-      saveAIReport(report);
-      setIsSaving(false);
-      setLastSaved(new Date());
-    }, 500);
-
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
-  }, [report, isDemo, isEditing]);
+  const { saveFailed, lastSaved } = useAutoSave(
+    report,
+    saveAIReport,
+    !isDemo && isEditing
+  );
 
   return (
     <AIReportContext.Provider
@@ -78,7 +58,7 @@ export function AIReportProvider({
         report,
         isEditing,
         isDemo,
-        isSaving,
+        saveFailed,
         lastSaved,
         updateReport,
         setReport,

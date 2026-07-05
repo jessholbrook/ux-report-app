@@ -38,29 +38,35 @@ export function loadAIReport(id: string): AIReport | null {
   }
 }
 
-export function saveAIReport(report: AIReport): void {
-  if (typeof window === "undefined") return;
+/** Returns false when the write fails (e.g. localStorage quota exceeded). */
+export function saveAIReport(report: AIReport): boolean {
+  if (typeof window === "undefined") return false;
 
-  localStorage.setItem(reportKey(report.id), JSON.stringify(report));
+  try {
+    localStorage.setItem(reportKey(report.id), JSON.stringify(report));
 
-  const index = listAIReports();
-  const existing = index.findIndex((e) => e.id === report.id);
-  const entry: AIReportIndexEntry = {
-    id: report.id,
-    title: report.title,
-    summary: report.summary,
-    status: report.status,
-    updated_at: new Date().toISOString(),
-    tags: report.tags,
-  };
+    const index = listAIReports();
+    const existing = index.findIndex((e) => e.id === report.id);
+    const entry: AIReportIndexEntry = {
+      id: report.id,
+      title: report.title,
+      summary: report.summary,
+      status: report.status,
+      updated_at: new Date().toISOString(),
+      tags: report.tags ?? [],
+    };
 
-  if (existing >= 0) {
-    index[existing] = entry;
-  } else {
-    index.unshift(entry);
+    if (existing >= 0) {
+      index[existing] = entry;
+    } else {
+      index.unshift(entry);
+    }
+
+    localStorage.setItem(INDEX_KEY, JSON.stringify(index));
+    return true;
+  } catch {
+    return false;
   }
-
-  localStorage.setItem(INDEX_KEY, JSON.stringify(index));
 }
 
 export function deleteAIReport(id: string): void {

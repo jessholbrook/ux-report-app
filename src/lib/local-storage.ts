@@ -42,34 +42,44 @@ export function loadLocalReport(id: string): StoredReport | null {
   }
 }
 
+/**
+ * Returns false when the write fails — most commonly QuotaExceededError once
+ * base64 images push a report past the ~5MB localStorage limit. Callers must
+ * surface this; a silent failure here means silent data loss.
+ */
 export function saveLocalReport(
   report: Report,
   blocks: Block[],
   annotations: Annotation[]
-): void {
-  if (typeof window === "undefined") return;
+): boolean {
+  if (typeof window === "undefined") return false;
 
-  // Save full report data
-  const stored: StoredReport = { report, blocks, annotations };
-  localStorage.setItem(reportKey(report.id), JSON.stringify(stored));
+  try {
+    // Save full report data
+    const stored: StoredReport = { report, blocks, annotations };
+    localStorage.setItem(reportKey(report.id), JSON.stringify(stored));
 
-  // Update index
-  const index = listLocalReports();
-  const existing = index.findIndex((e) => e.id === report.id);
-  const entry: ReportIndexEntry = {
-    id: report.id,
-    title: report.title,
-    description: report.description,
-    updated_at: new Date().toISOString(),
-  };
+    // Update index
+    const index = listLocalReports();
+    const existing = index.findIndex((e) => e.id === report.id);
+    const entry: ReportIndexEntry = {
+      id: report.id,
+      title: report.title,
+      description: report.description,
+      updated_at: new Date().toISOString(),
+    };
 
-  if (existing >= 0) {
-    index[existing] = entry;
-  } else {
-    index.unshift(entry);
+    if (existing >= 0) {
+      index[existing] = entry;
+    } else {
+      index.unshift(entry);
+    }
+
+    localStorage.setItem(INDEX_KEY, JSON.stringify(index));
+    return true;
+  } catch {
+    return false;
   }
-
-  localStorage.setItem(INDEX_KEY, JSON.stringify(index));
 }
 
 export function deleteLocalReport(id: string): void {

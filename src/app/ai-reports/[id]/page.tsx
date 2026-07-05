@@ -16,6 +16,8 @@ export default function AIReportViewPage() {
 
   useEffect(() => {
     const id = params.id as string;
+    // localStorage is client-only, so this load must happen post-mount
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setReport(loadAIReport(id));
     setLoaded(true);
   }, [params.id]);

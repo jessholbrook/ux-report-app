@@ -12,7 +12,7 @@ interface ImageBlockProps {
 }
 
 export function ImageBlock({ block }: ImageBlockProps) {
-  const { updateBlock, isEditing, isDemo } = useReport();
+  const { updateBlock, isEditing } = useReport();
   const content = block.content as ImageContent;
   const fileInputRef = useRef<HTMLInputElement>(null);
 

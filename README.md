@@ -50,8 +50,10 @@ stakeholder through specific moments in a flow.
 ### Export and share
 
 - **PDF export** via `html-to-image` + `jspdf` (handles Tailwind v4's
-  `oklch()` colors that `html2canvas` cannot parse).
-- **JSON import / export** for portability between accounts.
+  `oklch()` colors that `html2canvas` cannot parse). Loaded on demand so the
+  ~400KB of PDF tooling stays out of the initial bundle.
+- **JSON import / export** for portability between accounts. Imported HTML is
+  sanitized and the payload shape is validated before it touches storage.
 - **Public share links** and email invites via Supabase row-level security.
 
 ---
@@ -102,6 +104,8 @@ The AI report viewer composes a handful of dedicated panels — see
 - **Tailwind CSS v4** + **shadcn/ui** (Radix primitives)
 - **Supabase** — Postgres, Auth, RLS
 - **html-to-image + jspdf** — client-side PDF export
+- **isomorphic-dompurify** — SSR-safe HTML sanitization for report content
+- **Vitest + jsdom** — unit tests for storage, import validation, and sanitization
 - **TypeScript 5.9.3** (locked — see commit `05f7c8b`)
 
 ---
@@ -132,8 +136,12 @@ NEXT_PUBLIC_SUPABASE_URL=https://<project>.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon-key>
 ```
 
-Then run the schema migration in `supabase/migrations/001_initial_schema.sql`
-against your Supabase project.
+Then run the schema migrations against your Supabase project, in order:
+
+1. `supabase/migrations/001_initial_schema.sql` — tables, RLS, storage bucket
+2. `supabase/migrations/002_fix_rls_write_access.sql` — **required**; restricts
+   block/annotation writes on public/shared reports to owners only (001 alone
+   lets any viewer write). Don't skip this.
 
 ### 3. Run
 
@@ -172,9 +180,10 @@ src/
 │   └── ui/                 # shadcn primitives
 ├── contexts/               # React contexts (auth, report state)
 ├── hooks/
-└── lib/                    # Supabase client, local-storage, types
+├── lib/                    # Supabase client, local-storage, sanitize, types
+└── test/                   # Vitest setup
 supabase/
-└── migrations/             # SQL schema
+└── migrations/             # SQL schema (001 initial, 002 RLS write fix)
 ```
 
 ---
@@ -182,11 +191,27 @@ supabase/
 ## Scripts
 
 ```bash
-npm run dev      # Next.js dev server (Turbopack) on :3000
-npm run build    # Production build
-npm run start    # Run production build
-npm run lint     # ESLint
+npm run dev        # Next.js dev server (Turbopack) on :3000
+npm run build      # Production build
+npm run start      # Run production build
+npm run lint       # ESLint
+npm test           # Run the Vitest suite once
+npm run test:watch # Vitest in watch mode
 ```
+
+## Testing & CI
+
+Unit tests live next to the code they cover (`src/**/*.test.ts`) and run under
+Vitest + jsdom. Coverage focuses on the pure, failure-prone logic:
+
+- `blocks.test.ts` — block reordering index math
+- `import-json.test.ts` — imported-payload validation
+- `local-storage.test.ts` — save/load round-trips and quota-failure handling
+- `sanitize.test.ts` — HTML sanitization strips scripts, event handlers, and
+  `javascript:` URLs
+
+[`.github/workflows/ci.yml`](.github/workflows/ci.yml) runs `tsc --noEmit`,
+ESLint, the test suite, and a production build on every push and PR.
 
 ---
 

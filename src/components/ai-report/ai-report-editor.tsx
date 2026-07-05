@@ -14,6 +14,7 @@ import { ConnectionsPanel } from "./connections-panel";
 import { useState } from "react";
 import { Plus, X, Hash } from "lucide-react";
 import { v4 as uuidv4 } from "uuid";
+import { sanitizeHtml } from "@/lib/sanitize";
 import type {
   AIReportSection,
   FindingContent,
@@ -40,7 +41,7 @@ function SectionRenderer({ section }: { section: AIReportSection }) {
       return (
         <div
           className="prose prose-sm dark:prose-invert max-w-none"
-          dangerouslySetInnerHTML={{ __html: content.html }}
+          dangerouslySetInnerHTML={{ __html: sanitizeHtml(content.html) }}
         />
       );
     }
@@ -211,7 +212,7 @@ export function AIReportEditor() {
 
         {/* Tags */}
         <TagInput
-          tags={report.tags}
+          tags={report.tags ?? []}
           onChange={(tags) => updateReport({ tags })}
         />
       </div>

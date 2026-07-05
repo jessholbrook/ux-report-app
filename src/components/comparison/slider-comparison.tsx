@@ -50,6 +50,7 @@ export function SliderComparison({
 
     const onTouchMove = (e: TouchEvent) => {
       if (isDragging.current && e.touches[0]) {
+        e.preventDefault(); // keep the page from scrolling while dragging
         handleMove(e.touches[0].clientX);
       }
     };
@@ -59,9 +60,26 @@ export function SliderComparison({
       document.removeEventListener("touchend", onTouchEnd);
     };
 
-    document.addEventListener("touchmove", onTouchMove);
+    document.addEventListener("touchmove", onTouchMove, { passive: false });
     document.addEventListener("touchend", onTouchEnd);
   }, [handleMove]);
+
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    const step = e.shiftKey ? 10 : 2;
+    if (e.key === "ArrowLeft" || e.key === "ArrowDown") {
+      e.preventDefault();
+      setSliderPct((p) => Math.max(0, p - step));
+    } else if (e.key === "ArrowRight" || e.key === "ArrowUp") {
+      e.preventDefault();
+      setSliderPct((p) => Math.min(100, p + step));
+    } else if (e.key === "Home") {
+      e.preventDefault();
+      setSliderPct(0);
+    } else if (e.key === "End") {
+      e.preventDefault();
+      setSliderPct(100);
+    }
+  }, []);
 
   return (
     <div
@@ -74,10 +92,11 @@ export function SliderComparison({
         <img src={beforeUrl} alt={beforeLabel} className="block w-full" />
       </AnnotationLayer>
 
-      {/* After image (clipped) */}
+      {/* After image, revealed to the RIGHT of the divider so it sits under
+          the "After" label (clip from the left edge up to the slider) */}
       <div
         className="absolute inset-0"
-        style={{ clipPath: `inset(0 ${100 - sliderPct}% 0 0)` }}
+        style={{ clipPath: `inset(0 0 0 ${sliderPct}%)` }}
       >
         <AnnotationLayer blockId={blockId} imageKey="after">
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -87,10 +106,17 @@ export function SliderComparison({
 
       {/* Slider handle */}
       <div
-        className="absolute top-0 bottom-0 z-10 w-1 cursor-col-resize bg-white shadow-lg"
+        role="slider"
+        tabIndex={0}
+        aria-label={`Comparison slider: ${beforeLabel} versus ${afterLabel}`}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={Math.round(sliderPct)}
+        className="absolute top-0 bottom-0 z-10 w-1 cursor-col-resize bg-white shadow-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
         style={{ left: `${sliderPct}%`, transform: "translateX(-50%)" }}
         onMouseDown={handleMouseDown}
         onTouchStart={handleTouchStart}
+        onKeyDown={handleKeyDown}
       >
         <div className="absolute left-1/2 top-1/2 flex h-10 w-10 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-white shadow-md">
           <svg
