@@ -56,6 +56,8 @@ export default function Home() {
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
+    // localStorage is client-only, so this load must happen post-mount
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setHasReports(listLocalReports().length > 0);
     setLoaded(true);
   }, []);

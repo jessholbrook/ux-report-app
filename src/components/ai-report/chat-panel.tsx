@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useAIReport } from "@/contexts/ai-report-context";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MessageCircle, Send, X, Bot, User } from "lucide-react";
@@ -10,6 +11,9 @@ interface Message {
   content: string;
 }
 
+const CHAT_UNAVAILABLE =
+  "Live chat isn't connected for this report yet. Try the sample report at /ai-reports/demo to see how interrogating findings will work.";
+
 const starterQuestions = [
   "What was the most critical finding?",
   "How confident are we in the back-button finding?",
@@ -18,6 +22,7 @@ const starterQuestions = [
 ];
 
 export function ChatPanel() {
+  const { isDemo } = useAIReport();
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
@@ -28,8 +33,10 @@ export function ChatPanel() {
 
     const userMsg: Message = { role: "user", content: message };
 
-    // Simulated response based on question
-    const response = getSimulatedResponse(message);
+    // The canned answers describe the demo report specifically, so only serve
+    // them in demo mode — otherwise they'd fabricate findings about the user's
+    // real report, which contradicts the whole "AI transparency" premise.
+    const response = isDemo ? getSimulatedResponse(message) : CHAT_UNAVAILABLE;
     const assistantMsg: Message = { role: "assistant", content: response };
 
     setMessages((prev) => [...prev, userMsg, assistantMsg]);
@@ -48,12 +55,17 @@ export function ChatPanel() {
   }
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 flex w-96 flex-col rounded-lg border bg-background shadow-xl max-h-[32rem]">
+    <div className="fixed bottom-6 right-6 z-50 flex w-[calc(100vw-3rem)] flex-col rounded-lg border bg-background shadow-xl max-h-[32rem] sm:w-96">
       {/* Header */}
       <div className="flex items-center justify-between border-b px-4 py-3">
         <div className="flex items-center gap-2">
           <Bot className="size-4 text-violet-500" />
           <span className="text-sm font-medium">Chat with this report</span>
+          {isDemo && (
+            <span className="rounded bg-violet-100 px-1.5 py-0.5 text-[10px] font-medium text-violet-700 dark:bg-violet-900 dark:text-violet-300">
+              Simulated
+            </span>
+          )}
         </div>
         <Button
           variant="ghost"

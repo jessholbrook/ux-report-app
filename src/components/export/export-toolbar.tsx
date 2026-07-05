@@ -5,19 +5,23 @@ import { useReport } from "@/contexts/report-context";
 import { Button } from "@/components/ui/button";
 import { ImportDialog } from "./import-dialog";
 import { exportReportAsJson } from "@/lib/export-json";
-import { exportReportAsPdf } from "@/lib/export-pdf";
 
 export function ExportToolbar() {
-  const { report, blocks, annotations, isSaving, lastSaved, isDemo } =
+  const { report, blocks, annotations, saveFailed, lastSaved, isDemo } =
     useReport();
   const [exporting, setExporting] = useState(false);
+  const [exportError, setExportError] = useState(false);
 
   async function handlePdfExport() {
     setExporting(true);
+    setExportError(false);
     try {
+      // Loaded on demand: jspdf + html-to-image are heavy and only needed here
+      const { exportReportAsPdf } = await import("@/lib/export-pdf");
       await exportReportAsPdf(report.title, blocks, annotations);
     } catch (err) {
       console.error("PDF export failed:", err);
+      setExportError(true);
     } finally {
       setExporting(false);
     }
@@ -41,9 +45,20 @@ export function ExportToolbar() {
         Export JSON
       </Button>
       <ImportDialog />
-      {!isDemo && lastSaved && (
+      {exportError && (
+        <span className="text-xs text-destructive" role="alert">
+          PDF export failed — try again
+        </span>
+      )}
+      {!isDemo && saveFailed && (
+        <span className="text-xs text-destructive ml-auto" role="alert">
+          Save failed — browser storage may be full. Recent changes are not
+          saved.
+        </span>
+      )}
+      {!isDemo && !saveFailed && lastSaved && (
         <span className="text-xs text-muted-foreground ml-auto">
-          {isSaving ? "Saving..." : `Saved ${formatTime(lastSaved)}`}
+          Saved {formatTime(lastSaved)}
         </span>
       )}
     </div>

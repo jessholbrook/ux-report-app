@@ -19,6 +19,8 @@ export default function ReportViewPage({
   useEffect(() => {
     const stored = loadLocalReport(id);
     if (stored) {
+      // localStorage is client-only, so this load must happen post-mount
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setData(stored);
     } else {
       router.replace("/");

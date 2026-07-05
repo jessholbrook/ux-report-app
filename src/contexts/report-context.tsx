@@ -5,10 +5,13 @@ import {
   useContext,
   useState,
   useCallback,
+  useMemo,
   type ReactNode,
 } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { useAutoSave } from "@/hooks/use-auto-save";
+import { saveLocalReport } from "@/lib/local-storage";
+import { moveBlockInList } from "@/lib/blocks";
 import type {
   Block,
   BlockType,
@@ -26,7 +29,7 @@ interface ReportState {
   activeBlockId: string | null;
   isDemo: boolean;
   isEditing: boolean;
-  isSaving: boolean;
+  saveFailed: boolean;
   lastSaved: Date | null;
 }
 
@@ -146,7 +149,11 @@ export function ReportProvider({
     (id: string, content: Partial<BlockContent>) => {
       setBlocks((prev) =>
         prev.map((b) =>
-          b.id === id ? { ...b, content: { ...b.content, ...content } } : b
+          b.id === id
+            ? // Cast needed because Block.content is a non-discriminated union;
+              // callers only ever pass fields valid for this block's type.
+              { ...b, content: { ...b.content, ...content } as BlockContent }
+            : b
         )
       );
     },
@@ -163,14 +170,7 @@ export function ReportProvider({
   );
 
   const moveBlock = useCallback((id: string, newPosition: number) => {
-    setBlocks((prev) => {
-      const block = prev.find((b) => b.id === id);
-      if (!block) return prev;
-
-      const others = prev.filter((b) => b.id !== id);
-      others.splice(newPosition, 0, block);
-      return others.map((b, i) => ({ ...b, position: i }));
-    });
+    setBlocks((prev) => moveBlockInList(prev, id, newPosition));
   }, []);
 
   const addAnnotation = useCallback(
@@ -237,12 +237,15 @@ export function ReportProvider({
     []
   );
 
-  const { isSaving, lastSaved } = useAutoSave({
-    report,
-    blocks,
-    annotations,
-    enabled: persistLocally && !isDemo,
-  });
+  const snapshot = useMemo(
+    () => ({ report, blocks, annotations }),
+    [report, blocks, annotations]
+  );
+  const { saveFailed, lastSaved } = useAutoSave(
+    snapshot,
+    (s) => saveLocalReport(s.report, s.blocks, s.annotations),
+    persistLocally && !isDemo
+  );
 
   return (
     <ReportContext.Provider
@@ -253,7 +256,7 @@ export function ReportProvider({
         activeBlockId,
         isDemo,
         isEditing,
-        isSaving,
+        saveFailed,
         lastSaved,
         setReport,
         setBlocks,

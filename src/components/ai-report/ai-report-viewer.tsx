@@ -9,10 +9,8 @@ import { ProvenancePanel } from "./provenance-panel";
 import { ConnectionsPanel } from "./connections-panel";
 import { ChatPanel } from "./chat-panel";
 import { Separator } from "@/components/ui/separator";
-import type {
-  AIReportSection,
-  FindingContent,
-} from "@/lib/ai-report-types";
+import { sanitizeHtml } from "@/lib/sanitize";
+import type { AIReportSection } from "@/lib/ai-report-types";
 import type { HeadingContent, TextContent } from "@/lib/types";
 
 function SectionRenderer({ section }: { section: AIReportSection }) {
@@ -37,7 +35,7 @@ function SectionRenderer({ section }: { section: AIReportSection }) {
       return (
         <div
           className="prose prose-sm dark:prose-invert max-w-none"
-          dangerouslySetInnerHTML={{ __html: content.html }}
+          dangerouslySetInnerHTML={{ __html: sanitizeHtml(content.html) }}
         />
       );
     }

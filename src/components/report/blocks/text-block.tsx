@@ -1,6 +1,7 @@
 "use client";
 
 import { useReport } from "@/contexts/report-context";
+import { sanitizeHtml } from "@/lib/sanitize";
 import type { Block, TextContent } from "@/lib/types";
 
 interface TextBlockProps {
@@ -15,7 +16,7 @@ export function TextBlock({ block }: TextBlockProps) {
     return (
       <div
         className="prose prose-sm max-w-none"
-        dangerouslySetInnerHTML={{ __html: content.html || "<p></p>" }}
+        dangerouslySetInnerHTML={{ __html: sanitizeHtml(content.html || "<p></p>") }}
       />
     );
   }
@@ -28,7 +29,7 @@ export function TextBlock({ block }: TextBlockProps) {
       onBlur={(e) => {
         updateBlock(block.id, { html: e.currentTarget.innerHTML });
       }}
-      dangerouslySetInnerHTML={{ __html: content.html || "" }}
+      dangerouslySetInnerHTML={{ __html: sanitizeHtml(content.html || "") }}
     />
   );
 }

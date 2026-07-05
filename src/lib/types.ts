@@ -29,7 +29,7 @@ export interface ComparisonContent {
   default_mode: ComparisonMode;
 }
 
-export interface DividerContent {}
+export type DividerContent = Record<string, never>;
 
 export type BlockContent =
   | TextContent

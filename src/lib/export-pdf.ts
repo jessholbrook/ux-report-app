@@ -1,5 +1,4 @@
 import { toPng } from "html-to-image";
-import { jsPDF } from "jspdf";
 import type { Block, Annotation } from "./types";
 
 const ANNOTATION_TYPE_LABELS: Record<string, string> = {
@@ -16,21 +15,53 @@ export async function exportReportAsPdf(
   const container = document.getElementById("report-content");
   if (!container) throw new Error("Report content container not found");
 
-  // Find all mode toggle buttons and switch comparisons to side-by-side
-  const modeButtons = container.querySelectorAll<HTMLButtonElement>("button");
-  modeButtons.forEach((btn) => {
-    if (btn.textContent?.includes("Switch to Side by Side")) {
-      btn.click();
+  // A slider comparison only shows half its image in a static capture, so we
+  // temporarily flip every slider block to side-by-side for the PDF. We record
+  // the original mode of each block and restore it in `finally`, matching
+  // blocks by data attribute rather than button text so a failed capture can
+  // never leave a comparison permanently flipped (or flip an already
+  // side-by-side block by mistake).
+  const originalModes = new Map<Element, string | null>();
+  const comparisonBlocks =
+    container.querySelectorAll<HTMLElement>("[data-comparison-block]");
+  comparisonBlocks.forEach((el) => {
+    originalModes.set(el, el.getAttribute("data-mode"));
+    if (el.getAttribute("data-mode") === "slider") {
+      el.querySelector<HTMLButtonElement>("[data-comparison-toggle]")?.click();
     }
   });
 
-  // Wait for re-render
-  await new Promise((r) => setTimeout(r, 300));
+  try {
+    // Wait for re-render
+    await new Promise((r) => setTimeout(r, 300));
 
-  const dataUrl = await toPng(container, {
-    pixelRatio: 2,
-    backgroundColor: "#ffffff",
-  });
+    const dataUrl = await toPng(container, {
+      pixelRatio: 2,
+      backgroundColor: "#ffffff",
+    });
+    await buildPdf(dataUrl, title, blocks, annotations);
+  } finally {
+    // Restore each block to the mode it started in, whatever happened above.
+    container
+      .querySelectorAll<HTMLElement>("[data-comparison-block]")
+      .forEach((el) => {
+        const original = originalModes.get(el);
+        if (original && el.getAttribute("data-mode") !== original) {
+          el.querySelector<HTMLButtonElement>(
+            "[data-comparison-toggle]"
+          )?.click();
+        }
+      });
+  }
+}
+
+async function buildPdf(
+  dataUrl: string,
+  title: string,
+  blocks: Block[],
+  annotations: Annotation[]
+): Promise<void> {
+  const { jsPDF } = await import("jspdf");
 
   // Load image to get dimensions
   const img = new Image();
@@ -121,14 +152,6 @@ export async function exportReportAsPdf(
       y += 5;
     });
   }
-
-  // Restore comparison modes back to slider if they were toggled
-  const restoreButtons = container.querySelectorAll<HTMLButtonElement>("button");
-  restoreButtons.forEach((btn) => {
-    if (btn.textContent?.includes("Switch to Slider")) {
-      btn.click();
-    }
-  });
 
   pdf.save(`${title || "report"}.pdf`);
 }

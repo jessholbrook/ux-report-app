@@ -64,7 +64,7 @@ export function ReportEditor() {
         />
       </div>
 
-      <div className="space-y-1">
+      <div className="space-y-1" onDragEnd={() => setDragOverIndex(null)}>
         {blocks.map((block, index) => (
           <div key={block.id}>
             <div
